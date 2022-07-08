@@ -12,11 +12,11 @@ router.post('/callReadFn', async (req, res) => {
         contractAbi,
         contractAddress,
         functionName,
-        ...args
+        functionParams
     } = req.body;
 
     try {
-        let result = await callReadFn(rpcUrl, contractAbi, contractAddress, functionName, args);
+        let result = await callReadFn(rpcUrl, contractAbi, contractAddress, functionName, functionParams);
         res.json(result);
     } catch (err) {
         res.status(400).json({err: err.message})
@@ -30,11 +30,11 @@ router.post('/callWriteFn', async (req, res) => {
         contractAddress,
         functionName,
         privateKey,
-        ...args
+        functionParams
     } = req.body;
 
     try {
-        let result = await callWriteFn(rpcUrl, contractAbi, contractAddress, functionName, privateKey, args);
+        let result = await callWriteFn(rpcUrl, contractAbi, contractAddress, functionName, privateKey, functionParams);
         res.json(result);
     } catch (err) {
         res.status(400).json({err: err.message})

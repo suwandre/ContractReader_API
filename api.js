@@ -5,7 +5,7 @@ const callReadFn = async (
     contractAbi,
     contractAddress,
     functionName,
-    ...args
+    functionParams
 ) => {
     try {
         const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
@@ -15,25 +15,17 @@ const callReadFn = async (
             provider
         );
 
-        let parsedArgs = [];
-
-        args.forEach((arg) => {
-            for (key in arg) {
-                if (arg.hasOwnProperty(key)) {
-                    parsedArgs.push(arg[key]);
-                }
-            }
-        });
-
-        const fn = await contract[functionName].apply(this, parsedArgs);
+        const fn = await contract[functionName].apply(this, functionParams);
 
         let returnValues = {};
-
-        for (i = 0; i < fn.length; i++) {
-            if (ethers.BigNumber.isBigNumber(fn[i])) {
-                returnValues[i] = parseInt(ethers.utils.formatUnits(fn[i], "wei"));
-            } else {
-                returnValues[i] = fn[i];
+        if (typeof fn === "object" || typeof fn === "array") {
+            for (let i = 0; i < fn.length; i++) {
+                if (ethers.BigNumber.isBigNumber(fn[i])) {
+                    val = parseInt(ethers.utils.formatUnits(fn[i], "wei"));
+                    returnValues[`param ${i}`] = val;
+                } else {
+                    returnValues[`param ${i}`] = fn[i];
+                }
             }
         }
 
@@ -50,7 +42,7 @@ const callWriteFn = async (
     contractAddress,
     functionName,
     privateKey,
-    ...args
+    functionParams
 ) => {
     try {
         const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
@@ -62,17 +54,7 @@ const callWriteFn = async (
 
         const signer = new ethers.Wallet(privateKey, provider);
 
-        let parsedArgs = [];
-
-        args.forEach((arg) => {
-            for (key in arg) {
-                if (arg.hasOwnProperty(key)) {
-                    parsedArgs.push(arg[key]);
-                }
-            }
-        });
-
-        let unsignedTx = await contract.populateTransaction[functionName].apply(this, parsedArgs);
+        let unsignedTx = await contract.populateTransaction[functionName].apply(this, functionParams);
         let response = await signer.sendTransaction(unsignedTx);
 
         await response.wait();
